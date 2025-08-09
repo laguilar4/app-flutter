@@ -219,6 +219,26 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                                     );
                                   }
                                 },
+                                onDelete: () async {
+                                  final exito = await tareasProvider
+                                      .eliminarTarea(tarea['id']);
+                                  if (exito) {
+                                    setState(() {
+                                      tareasProvider.tareas.removeAt(index);
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Tarea eliminada correctamente')),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Error al eliminar la tarea')),
+                                    );
+                                  }
+                                },
                               );
                             }
                             return const SizedBox.shrink();
@@ -235,9 +255,14 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
 class TaskCard extends StatefulWidget {
   final Map<String, dynamic> tarea;
   final Future<void> Function(String) onStatusChanged;
+  final Future<void> Function()? onDelete; // Callback para eliminar
 
-  const TaskCard(
-      {super.key, required this.tarea, required this.onStatusChanged});
+  const TaskCard({
+    super.key,
+    required this.tarea,
+    required this.onStatusChanged,
+    this.onDelete,
+  });
 
   @override
   State<TaskCard> createState() => _TaskCardState();
@@ -246,6 +271,7 @@ class TaskCard extends StatefulWidget {
 class _TaskCardState extends State<TaskCard> {
   late String _currentStatus;
   bool _isLoading = false;
+  bool _isDeleting = false;
 
   @override
   void initState() {
@@ -268,6 +294,40 @@ class _TaskCardState extends State<TaskCard> {
     });
   }
 
+  Future<void> _handleDelete() async {
+    if (_isDeleting) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Confirmar eliminación'),
+        content: const Text('¿Deseas eliminar esta tarea?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Eliminar')),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() {
+      _isDeleting = true;
+    });
+
+    if (widget.onDelete != null) {
+      await widget.onDelete!();
+    }
+
+    setState(() {
+      _isDeleting = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -279,9 +339,27 @@ class _TaskCardState extends State<TaskCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              widget.tarea['title'] ?? 'Sin título',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.tarea['title'] ?? 'Sin título',
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                _isDeleting
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: _handleDelete,
+                        tooltip: 'Eliminar tarea',
+                      ),
+              ],
             ),
             const SizedBox(height: 6),
             Text(

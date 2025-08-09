@@ -10,6 +10,26 @@ class TareasProvider with ChangeNotifier {
   List<dynamic> get tareas => _tareas;
   bool get cargando => _cargando;
 
+  Future<bool> eliminarTarea(dynamic tareaId) async {
+    try {
+      // Aquí harías la petición para eliminar la tarea del backend
+      // Ejemplo con http:
+      final response = await http.delete(Uri.parse('$api_url/tasks/$tareaId'));
+
+      if (response.statusCode == 200) {
+        // Eliminar localmente
+        tareas.removeWhere((t) => t['id'] == tareaId);
+        notifyListeners();
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      print('Error eliminando tarea: $e');
+      return false;
+    }
+  }
+
   Future<bool> actualizarEstadoTarea(
       Map<String, dynamic> tarea, String nuevoEstado) async {
     final tareaId = tarea['id'];
