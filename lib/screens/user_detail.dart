@@ -329,6 +329,7 @@ class _TaskCardState extends State<TaskCard> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 3,
@@ -345,7 +346,9 @@ class _TaskCardState extends State<TaskCard> {
                   child: Text(
                     widget.tarea['title'] ?? 'Sin título',
                     style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.w600),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 _isDeleting

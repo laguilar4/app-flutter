@@ -24,6 +24,24 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _onTabChanged(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+
+    if (index == 2) {
+      // Cuando se selecciona la pestaña Tareas, cargar las tareas del usuario
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final tareasProvider =
+          Provider.of<TareasProvider>(context, listen: false);
+
+      final userId = authProvider.usuario?['id'];
+      if (userId != null) {
+        tareasProvider.fetchTareasPorUsuario(userId);
+      }
+    }
+  }
+
   Widget _buildUsuarios() {
     return Consumer<UsuariosProvider>(
       builder: (context, usuariosProvider, child) {
@@ -75,6 +93,81 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildTareas() {
+    return Consumer2<AuthProvider, TareasProvider>(
+      builder: (context, authProvider, tareasProvider, child) {
+        if (tareasProvider.cargando) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final userId = authProvider.usuario?['id'];
+        if (userId == null) {
+          return const Center(child: Text("Usuario no autenticado"));
+        }
+
+        // Filtrar tareas por usuario actual
+        final tareasUsuario =
+            tareasProvider.tareas.where((t) => t['user_id'] == userId).toList();
+
+        if (tareasUsuario.isEmpty) {
+          return const Center(
+            child: Text(
+              "No tienes tareas asignadas",
+              style: TextStyle(fontSize: 16),
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: () => tareasProvider.fetchTareasPorUsuario(userId),
+          child: ListView.builder(
+            padding: const EdgeInsets.all(10),
+            itemCount: tareasUsuario.length,
+            itemBuilder: (context, index) {
+              final tarea = tareasUsuario[index];
+
+              return TaskCard(
+                tarea: tarea,
+                onStatusChanged: (newStatus) async {
+                  final exito = await tareasProvider.actualizarEstadoTarea(
+                      tarea, newStatus);
+                  if (exito) {
+                    // Actualizar estado local para refrescar UI
+                    setState(() {
+                      tarea['status'] = newStatus;
+                    });
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Error al actualizar el estado')),
+                    );
+                  }
+                },
+                onDelete: () async {
+                  final exito = await tareasProvider.eliminarTarea(tarea['id']);
+                  if (exito) {
+                    setState(() {
+                      tareasProvider.tareas.remove(tarea);
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Tarea eliminada correctamente')),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Error al eliminar la tarea')),
+                    );
+                  }
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildContent() {
     if (_currentIndex == 0) {
       return const Center(
@@ -85,6 +178,8 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     } else if (_currentIndex == 1) {
       return _buildUsuarios();
+    } else if (_currentIndex == 2) {
+      return _buildTareas();
     }
     return const SizedBox.shrink();
   }
@@ -120,7 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: _currentIndex,
         selectedItemColor: const Color(0xFF004e92),
         unselectedItemColor: Colors.grey,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: _onTabChanged, // Usamos la función que maneja carga de tareas
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
@@ -129,6 +224,10 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.people),
             label: "Usuarios",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.task),
+            label: "Tareas",
           ),
         ],
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uninorte/providers/auth.dart';
+import 'package:uninorte/providers/task.dart';
 import 'package:uninorte/providers/user.dart';
 import 'package:uninorte/screens/login.dart';
 
@@ -10,6 +11,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => UsuariosProvider()),
+        ChangeNotifierProvider(create: (_) => TareasProvider()),
       ],
       child: const MyApp(),
     ),
