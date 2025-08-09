@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uninorte/providers/task.dart';
-import 'package:uninorte/providers/user.dart';
 
 class UserDetailScreen extends StatefulWidget {
   final Map<String, dynamic> usuario;
@@ -16,8 +15,15 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
   @override
   void initState() {
     super.initState();
-    final tareasProvider = Provider.of<TareasProvider>(context, listen: false);
-    tareasProvider.fetchTareasPorUsuario(widget.usuario['id']);
+    // Esperamos a que se monte el widget para llamar al provider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final tareasProvider =
+          Provider.of<TareasProvider>(context, listen: false);
+      final userId = widget.usuario['id'];
+      if (userId != null) {
+        tareasProvider.fetchTareasPorUsuario(userId);
+      }
+    });
   }
 
   @override
@@ -42,6 +48,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
               'Tareas',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 10),
             Expanded(
               child: tareasProvider.cargando
                   ? const Center(child: CircularProgressIndicator())
@@ -50,20 +57,24 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                       : ListView.builder(
                           itemCount: tareasProvider.tareas.length,
                           itemBuilder: (context, index) {
-                            final tarea = tareasProvider.tareas[index]
-                                as Map<String, dynamic>;
-                            return ListTile(
-                              title: Text(tarea['titulo'] ?? 'Sin título'),
-                              subtitle: Text(tarea['descripcion'] ?? ''),
-                              trailing: tarea['completada'] == true
-                                  ? const Icon(Icons.check_circle,
-                                      color: Colors.green)
-                                  : const Icon(Icons.pending,
-                                      color: Colors.orange),
-                            );
+                            final tarea = tareasProvider.tareas[index];
+                            // Aseguramos que tarea sea Map<String, dynamic>
+                            if (tarea is Map<String, dynamic>) {
+                              return ListTile(
+                                title: Text(tarea['title'] ?? 'Sin título'),
+                                subtitle: Text(tarea['description'] ?? ''),
+                                trailing: (tarea['completada'] == true)
+                                    ? const Icon(Icons.check_circle,
+                                        color: Colors.green)
+                                    : const Icon(Icons.pending,
+                                        color: Colors.orange),
+                              );
+                            } else {
+                              return const SizedBox.shrink();
+                            }
                           },
                         ),
-            )
+            ),
           ],
         ),
       ),

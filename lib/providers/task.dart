@@ -11,21 +11,28 @@ class TareasProvider with ChangeNotifier {
   bool get cargando => _cargando;
 
   Future<void> fetchTareasPorUsuario(int userId) async {
-    final apiUrl = "$api_url/users/$userId/tasks";
+    final apiUrl = "$api_url/tasks/$userId";
     _cargando = true;
     notifyListeners();
 
     try {
       final response = await http.get(Uri.parse(apiUrl));
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> json = jsonDecode(response.body);
+      print('Status code: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
-        if (json['tareas'] != null && json['tareas'] is List) {
-          _tareas = json['tareas'];
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonList = jsonDecode(response.body);
+
+        if (jsonList.isNotEmpty) {
+          _tareas = List<Map<String, dynamic>>.from(jsonList);
         } else {
           _tareas = [];
         }
+      } else if (response.statusCode == 404) {
+        print('No se encontraron tareas para este usuario');
+        _tareas = [];
       } else {
+        print('Error en la respuesta HTTP: ${response.statusCode}');
         _tareas = [];
       }
     } catch (e) {
