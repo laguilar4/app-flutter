@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uninorte/providers/auth.dart';
 import 'package:uninorte/screens/home.dart';
+import 'package:uninorte/screens/student.dart';
+import 'package:uninorte/screens/teacher.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -122,12 +124,39 @@ class _LoginScreenState extends State<LoginScreen> {
                                     setState(() => _loading = false);
 
                                     if (success) {
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => const HomeScreen(),
-                                        ),
-                                      );
+                                      final role =
+                                          authProvider.usuario?['role'] ?? '';
+
+                                      if (role == 'admin') {
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (_) =>
+                                                  const HomeScreen()),
+                                        );
+                                      } else if (role == 'teacher') {
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (_) =>
+                                                  const TeacherScreen()),
+                                        );
+                                      } else if (role == 'student') {
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (_) =>
+                                                  const StudentScreen()),
+                                        );
+                                      } else {
+                                        // Vista por defecto si no coincide ningún rol
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (_) =>
+                                                  const HomeScreen()),
+                                        );
+                                      }
                                     } else {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
