@@ -10,6 +10,34 @@ class TareasProvider with ChangeNotifier {
   List<dynamic> get tareas => _tareas;
   bool get cargando => _cargando;
 
+  Future<bool> actualizarEstadoTarea(
+      Map<String, dynamic> tarea, String nuevoEstado) async {
+    final tareaId = tarea['id'];
+    final url = Uri.parse('$api_url/tasks/$tareaId');
+
+    // Clona la tarea y actualiza el estado
+    final Map<String, dynamic> datosActualizados =
+        Map<String, dynamic>.from(tarea);
+    datosActualizados['status'] = nuevoEstado;
+
+    // Opcional: asegúrate de enviar los campos que el backend requiere (title, description, status, due_date)
+    // Si due_date es null, enviarlo como null o string vacío según espera tu backend.
+
+    final response = await http.put(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(datosActualizados),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      print('Error actualizando estado: ${response.statusCode}');
+      print('Respuesta: ${response.body}');
+      return false;
+    }
+  }
+
   Future<void> fetchTareasPorUsuario(int userId) async {
     final apiUrl = "$api_url/tasks/$userId";
     _cargando = true;
