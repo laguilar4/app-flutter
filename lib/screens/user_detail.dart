@@ -12,6 +12,12 @@ class UserDetailScreen extends StatefulWidget {
 }
 
 class _UserDetailScreenState extends State<UserDetailScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _tituloController = TextEditingController();
+  final TextEditingController _descripcionController = TextEditingController();
+  String _nuevoEstado = 'pendiente';
+  bool _isSaving = false;
+
   @override
   void initState() {
     super.initState();
@@ -23,6 +29,56 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
         tareasProvider.fetchTareasPorUsuario(userId);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _tituloController.dispose();
+    _descripcionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _guardarTarea() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final tareasProvider = Provider.of<TareasProvider>(context, listen: false);
+    final userId = widget.usuario['id'];
+    if (userId == null) return;
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    final nuevaTarea = {
+      'title': _tituloController.text.trim(),
+      'description': _descripcionController.text.trim(),
+      'status': _nuevoEstado,
+      'user_id': userId,
+    };
+
+    final exito = await tareasProvider.crearTarea(nuevaTarea);
+
+    setState(() {
+      _isSaving = false;
+    });
+
+    if (exito) {
+      _tituloController.clear();
+      _descripcionController.clear();
+      setState(() {
+        _nuevoEstado = 'pendiente';
+      });
+
+      await tareasProvider.fetchTareasPorUsuario(userId);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tarea creada con éxito')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al crear la tarea')),
+      );
+    }
   }
 
   @override
@@ -45,11 +101,93 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
             Text('Rol: ${widget.usuario['role'] ?? 'N/A'}',
                 style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 24),
+
+            // Formulario para agregar tarea
+            const Text(
+              'Agregar nueva tarea',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+
+            Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: _tituloController,
+                    decoration: const InputDecoration(
+                      labelText: 'Título',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'El título es obligatorio';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _descripcionController,
+                    decoration: const InputDecoration(
+                      labelText: 'Descripción',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: _nuevoEstado,
+                    decoration: const InputDecoration(
+                      labelText: 'Estado',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                          value: 'pendiente', child: Text('Pendiente')),
+                      DropdownMenuItem(
+                          value: 'en_progreso', child: Text('En progreso')),
+                      DropdownMenuItem(
+                          value: 'completada', child: Text('Completada')),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _nuevoEstado = value;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _isSaving ? null : _guardarTarea,
+                      child: _isSaving
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Text('Agregar tarea'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF004e92),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
             const Text(
               'Tareas',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
+
             Expanded(
               child: tareasProvider.cargando
                   ? const Center(child: CircularProgressIndicator())

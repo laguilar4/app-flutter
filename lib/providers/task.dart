@@ -15,13 +15,9 @@ class TareasProvider with ChangeNotifier {
     final tareaId = tarea['id'];
     final url = Uri.parse('$api_url/tasks/$tareaId');
 
-    // Clona la tarea y actualiza el estado
     final Map<String, dynamic> datosActualizados =
         Map<String, dynamic>.from(tarea);
     datosActualizados['status'] = nuevoEstado;
-
-    // Opcional: asegúrate de enviar los campos que el backend requiere (title, description, status, due_date)
-    // Si due_date es null, enviarlo como null o string vacío según espera tu backend.
 
     final response = await http.put(
       url,
@@ -69,6 +65,43 @@ class TareasProvider with ChangeNotifier {
     } finally {
       _cargando = false;
       notifyListeners();
+    }
+  }
+
+  // Nueva función para crear/guardar una tarea asociada a un usuario
+  Future<bool> crearTarea(Map<String, dynamic> nuevaTarea) async {
+    final url = Uri.parse('$api_url/tasks');
+
+    // Prepara el mapa con los datos que espera el backend
+    final Map<String, dynamic> tareaParaEnviar = {
+      'title': nuevaTarea['title'],
+      'description': nuevaTarea['description'],
+      'status': nuevaTarea['status'],
+      'user_id': nuevaTarea['user_id'], // El id del usuario al que pertenece
+      // agrega más campos si los necesitas (due_date, etc.)
+    };
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(tareaParaEnviar),
+      );
+
+      if (response.statusCode == 201) {
+        // Si se crea correctamente, agrega localmente y notifica
+        final tareaCreada = jsonDecode(response.body);
+        _tareas.add(tareaCreada);
+        notifyListeners();
+        return true;
+      } else {
+        print('Error creando tarea: ${response.statusCode}');
+        print('Respuesta: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('Excepción creando tarea: $e');
+      return false;
     }
   }
 }
