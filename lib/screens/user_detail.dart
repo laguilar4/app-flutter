@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uninorte/providers/task.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class UserDetailScreen extends StatefulWidget {
   final Map<String, dynamic> usuario;
@@ -95,11 +96,37 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Email: ${widget.usuario['email'] ?? 'N/A'}',
-                style: const TextStyle(fontSize: 16)),
+            Text(
+              'Email: ${widget.usuario['email'] ?? 'N/A'}',
+              style: GoogleFonts.openSans(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+                shadows: [
+                  Shadow(
+                    offset: Offset(0.5, 0.5),
+                    blurRadius: 1,
+                    color: Colors.grey.shade300,
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 8),
-            Text('Rol: ${widget.usuario['role'] ?? 'N/A'}',
-                style: const TextStyle(fontSize: 16)),
+            Text(
+              'Rol: ${widget.usuario['role'] ?? 'N/A'}',
+              style: GoogleFonts.openSans(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+                shadows: [
+                  Shadow(
+                    offset: Offset(0.5, 0.5),
+                    blurRadius: 1,
+                    color: Colors.grey.shade300,
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 24),
 
             // Formulario para agregar tarea
@@ -173,6 +200,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                           : const Text('Agregar tarea'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF004e92),
+                        foregroundColor: Colors.white,
                       ),
                     ),
                   ),

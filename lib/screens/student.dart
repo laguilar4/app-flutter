@@ -121,7 +121,7 @@ class _StudentScreenState extends State<StudentScreen> {
     if (_currentIndex == 0) {
       return const Center(
         child: Text(
-          "Bienvenido al Sistema Universitario",
+          "Bienvenido al Sistema Uninorte",
           style: TextStyle(fontSize: 20),
         ),
       );
