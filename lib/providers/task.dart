@@ -12,9 +12,14 @@ class TareasProvider with ChangeNotifier {
 
   Future<bool> eliminarTarea(dynamic tareaId) async {
     try {
-      // Aquí harías la petición para eliminar la tarea del backend
-      // Ejemplo con http:
-      final response = await http.delete(Uri.parse('$api_url/tasks/$tareaId'));
+      String? token = await getToken();
+      final response = await http.delete(
+        Uri.parse('$api_url/tasks/$tareaId'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
 
       if (response.statusCode == 200) {
         // Eliminar localmente
@@ -33,6 +38,7 @@ class TareasProvider with ChangeNotifier {
   Future<bool> actualizarEstadoTarea(
       Map<String, dynamic> tarea, String nuevoEstado) async {
     final tareaId = tarea['id'];
+    String? token = await getToken();
     final url = Uri.parse('$api_url/tasks/$tareaId');
 
     final Map<String, dynamic> datosActualizados =
@@ -41,7 +47,10 @@ class TareasProvider with ChangeNotifier {
 
     final response = await http.put(
       url,
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
       body: jsonEncode(datosActualizados),
     );
 
@@ -55,6 +64,7 @@ class TareasProvider with ChangeNotifier {
   }
 
   Future<void> fetchTareasPorUsuario(int userId) async {
+    String? token = await getToken();
     final apiUrl = "$api_url/tasks/$userId";
     _cargando = true;
     notifyListeners();
@@ -90,6 +100,7 @@ class TareasProvider with ChangeNotifier {
 
   // Nueva función para crear/guardar una tarea asociada a un usuario
   Future<bool> crearTarea(Map<String, dynamic> nuevaTarea) async {
+    String? token = await getToken();
     final url = Uri.parse('$api_url/tasks');
 
     // Prepara el mapa con los datos que espera el backend
@@ -104,7 +115,10 @@ class TareasProvider with ChangeNotifier {
     try {
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
         body: jsonEncode(tareaParaEnviar),
       );
 

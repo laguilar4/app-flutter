@@ -14,11 +14,18 @@ class UsuariosProvider with ChangeNotifier {
   // Método para obtener usuarios desde el backend
   Future<void> fetchUsuarios() async {
     final apiUrl = "$api_url/users";
+    String? token = await getToken();
     _cargando = true;
     notifyListeners();
 
     try {
-      final response = await http.get(Uri.parse(apiUrl));
+      final response = await http.get(
+        Uri.parse(apiUrl),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
 
       if (response.statusCode == 200) {
         // Aquí decodificamos como lista directamente
