@@ -70,7 +70,13 @@ class TareasProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await http.get(Uri.parse(apiUrl));
+      final response = await http.get(
+        Uri.parse(apiUrl),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
       print('Status code: ${response.statusCode}');
       print('Response body: ${response.body}');
 

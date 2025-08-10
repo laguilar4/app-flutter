@@ -190,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Panel Universitario"),
+        title: const Text("Uninorte"),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
